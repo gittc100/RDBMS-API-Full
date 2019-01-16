@@ -134,7 +134,7 @@ server.get("/api/students/:id", (req, res) => {
   db.select('students.id', 'students.name', 'cohorts.name as cohort')
     .from("students")
     .innerJoin('cohorts', 'cohorts.id', '=', 'students.cohort_id')
-    .where('students.id', req.params.id )
+    .where({'students.id': req.params.id })
     .then(student => {
       if (student.length > 0) {
         res.status(200).json(student);
