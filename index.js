@@ -111,18 +111,37 @@ server.get("/api/students", (req, res) => {
     });
 });
 // get students by ID
+// server.get("/api/students/:id", (req, res) => {
+//   db("students")
+//     .where({ id: req.params.id })
+//     .then(student => {
+//       if (student.length > 0) {
+//         res.status(200).json(student);
+//       } else {
+//         res
+//           .status(404)
+//           .json({
+//             Error_Message: `student id: ${req.params.id} does not exist`
+//           });
+//       }
+//     })
+//     .catch(err => {
+//       res.status(500).json(err);
+//     });
+// });
+// get students by ID modified
 server.get("/api/students/:id", (req, res) => {
-  db("students")
-    .where({ id: req.params.id })
+  db.select('students.id', 'students.name', 'cohorts.name as cohort')
+    .from("students")
+    .innerJoin('cohorts', 'cohorts.id', '=', 'students.cohort_id')
+    .where(students.id, req.params.id )
     .then(student => {
       if (student.length > 0) {
         res.status(200).json(student);
       } else {
-        res
-          .status(404)
-          .json({
-            Error_Message: `student id: ${req.params.id} does not exist`
-          });
+        res.status(404).json({
+          Error_Message: `student id: ${req.params.id} does not exist`
+        });
       }
     })
     .catch(err => {
@@ -137,35 +156,35 @@ server.post("/api/students", (req, res) => {
       res.status(201).json(id);
     })
     .catch(err => {
-        err.status(500).json(err);
+      err.status(500).json(err);
     });
 });
 // delete students
 server.delete("/api/students/:id", (req, res) => {
-    db("students")
-      .where({ id: req.params.id })
-      .del()
-      .then(count => {
+  db("students")
+    .where({ id: req.params.id })
+    .del()
+    .then(count => {
+      res.status(200).json(count);
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
+});
+// update cohorts
+server.put("/api/students/:id", (req, res) => {
+  db("students")
+    .where({ id: req.params.id })
+    .update(req.body)
+    .then(count => {
+      if (count) {
         res.status(200).json(count);
-      })
-      .catch(err => {
-        res.status(500).json(err);
-      });
-  });
-  // update cohorts
-  server.put("/api/students/:id", (req, res) => {
-    db("students")
-      .where({ id: req.params.id })
-      .update(req.body)
-      .then(count => {
-        if (count) {
-          res.status(200).json(count);
-        } else {
-          res.status(404).json({ message: "Student not found" });
-        }
-      })
-      .catch(err => res.status(500).json(err));
-  });
+      } else {
+        res.status(404).json({ message: "Student not found" });
+      }
+    })
+    .catch(err => res.status(500).json(err));
+});
 
 // listen for server
 const PORT = 5100;
