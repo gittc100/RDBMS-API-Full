@@ -4,11 +4,10 @@ const knexConfig = require("./knexfile.js");
 const server = express();
 server.use(express.json());
 const db = knex(knexConfig.development);
-
-server.get("/", (req, res) => {
-  res.send("api working");
-});
-
+// test
+// server.get("/", (req, res) => {
+//   res.send("api working");
+// });
 // get cohorts
 server.get("/api/cohorts", (req, res) => {
   db("cohorts")
@@ -19,9 +18,7 @@ server.get("/api/cohorts", (req, res) => {
       res.status(500).json(err);
     });
 });
-
 // get cohort by id
-
 server.get("/api/cohorts/:id", (req, res) => {
   db("cohorts")
     .where({ id: req.params.id })
@@ -36,9 +33,7 @@ server.get("/api/cohorts/:id", (req, res) => {
       res.status(500).json(err);
     });
 });
-
 // get students by cohort id
-
 server.get("/api/cohorts/:id/students", (req, res) => {
   db("cohorts")
     .where({ id: req.params.id })
@@ -50,26 +45,24 @@ server.get("/api/cohorts/:id/students", (req, res) => {
             if (cohort.length > 0) {
               res.status(200).json(cohort);
             } else {
-              res.status(404).json({ message: `Cohort with ID: ${req.params.id} does not contain students.` });
+              res.status(404).json({
+                message: `Cohort with ID: ${
+                  req.params.id
+                } does not contain students.`
+              });
             }
           })
           .catch(err => {
             res.status(500).json(err);
           });
       } else {
-        res
-          .status(404)
-          .json({
-            Error_Message: `Cohort with the ID: ${
-              req.params.id
-            } does not exist.`
-          });
+        res.status(404).json({
+          Error_Message: `Cohort with the ID: ${req.params.id} does not exist.`
+        });
       }
     });
 });
-
 // add cohorts
-
 server.post("/api/cohorts", (req, res) => {
   db("cohorts")
     .insert(req.body)
@@ -80,9 +73,7 @@ server.post("/api/cohorts", (req, res) => {
       res.status(500).json(err);
     });
 });
-
 // delete cohorts
-
 server.delete("/api/cohorts/:id", (req, res) => {
   db("cohorts")
     .where({ id: req.params.id })
@@ -94,11 +85,9 @@ server.delete("/api/cohorts/:id", (req, res) => {
       res.status(500).json(err);
     });
 });
-
 // update cohorts
 server.put("/api/cohorts/:id", (req, res) => {
   const changes = req.body;
-
   db("cohorts")
     .where({ id: req.params.id })
     .update(changes)
@@ -111,7 +100,74 @@ server.put("/api/cohorts/:id", (req, res) => {
     })
     .catch(err => res.status(500).json(err));
 });
+// get all students
+server.get("/api/students", (req, res) => {
+  db("students")
+    .then(students => {
+      res.status(200).json(students);
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
+});
+// get students by ID
+server.get("/api/students/:id", (req, res) => {
+  db("students")
+    .where({ id: req.params.id })
+    .then(student => {
+      if (student.length > 0) {
+        res.status(200).json(student);
+      } else {
+        res
+          .status(404)
+          .json({
+            Error_Message: `student id: ${req.params.id} does not exist`
+          });
+      }
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
+});
+// create students
+server.post("/api/students", (req, res) => {
+  db("students")
+    .insert(req.body)
+    .then(id => {
+      res.status(201).json(id);
+    })
+    .catch(err => {
+        err.status(500).json(err);
+    });
+});
+// delete students
+server.delete("/api/students/:id", (req, res) => {
+    db("students")
+      .where({ id: req.params.id })
+      .del()
+      .then(count => {
+        res.status(200).json(count);
+      })
+      .catch(err => {
+        res.status(500).json(err);
+      });
+  });
+  // update cohorts
+  server.put("/api/students/:id", (req, res) => {
+    db("students")
+      .where({ id: req.params.id })
+      .update(req.body)
+      .then(count => {
+        if (count) {
+          res.status(200).json(count);
+        } else {
+          res.status(404).json({ message: "Student not found" });
+        }
+      })
+      .catch(err => res.status(500).json(err));
+  });
 
+// listen for server
 const PORT = 5100;
 server.listen(PORT, () => {
   console.log(`running server on port ${PORT}`);
