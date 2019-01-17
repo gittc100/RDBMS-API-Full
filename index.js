@@ -7,8 +7,8 @@ const db = knex(knexConfig.development);
 // functions
 const stdGet = (tbl) => (req, res) => {
     db(tbl)
-    .then(cohorts => {
-      res.status(200).json(cohorts);
+    .then(data => {
+      res.status(200).json(data);
     })
     .catch(err => {
       res.status(500).json(err);
@@ -18,9 +18,9 @@ const stdGet = (tbl) => (req, res) => {
 const stdGetById = (tbl) => (req, res) => {
     db(tbl)
     .where({ id: req.params.id })
-    .then(cohort => {
-      if (cohort.length > 0) {
-        res.status(200).json(cohort);
+    .then(data => {
+      if (data.length > 0) {
+        res.status(200).json(data);
       } else {
         res.status(404).json({ message: "Cohort not found" });
       }
