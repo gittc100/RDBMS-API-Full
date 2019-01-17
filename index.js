@@ -5,33 +5,52 @@ const server = express();
 server.use(express.json());
 const db = knex(knexConfig.development);
 // functions
-const stdGet = (tbl) => (req, res) => {
-    db(tbl)
+const stdGet = tbl => (req, res) => {
+  db(tbl)
     .then(data => {
       res.status(200).json(data);
     })
     .catch(err => {
       res.status(500).json(err);
     });
-}
+};
 
-const stdGetById = (tbl) => (req, res) => {
+const stdGetById = tbl => (req, res) => {
+  if (tbl === "cohorts") {
     db(tbl)
-    .where({ id: req.params.id })
-    .then(data => {
-      if (data.length > 0) {
-        res.status(200).json(data);
+      .where({ id: req.params.id })
+      .then(data => {
+        if (data.length > 0) {
+          res.status(200).json(data);
+        } else {
+          res.status(404).json({ message: "Cohort not found" });
+        }
+      })
+      .catch(err => {
+        res.status(500).json(err);
+      });
+  }else if(tbl === "students"){
+    db.select("students.id", "students.name", "cohorts.name as cohort")
+    .from("students")
+    .innerJoin("cohorts", "cohorts.id", "=", "students.cohort_id")
+    .where({ "students.id": req.params.id })
+    .then(student => {
+      if (student.length > 0) {
+        res.status(200).json(student);
       } else {
-        res.status(404).json({ message: "Cohort not found" });
+        res.status(404).json({
+          Error_Message: `student id: ${req.params.id} does not exist`
+        });
       }
     })
     .catch(err => {
       res.status(500).json(err);
     });
-}
+  }
+};
 
-const stdPost = (tbl) => (req, res) => {
-    db(tbl)
+const stdPost = tbl => (req, res) => {
+  db(tbl)
     .insert(req.body)
     .then(ids => {
       res.status(201).json(ids);
@@ -39,10 +58,10 @@ const stdPost = (tbl) => (req, res) => {
     .catch(err => {
       res.status(500).json(err);
     });
-}
+};
 
-const stdDelById = (tbl) => (req, res) => {
-    db(tbl)
+const stdDelById = tbl => (req, res) => {
+  db(tbl)
     .where({ id: req.params.id })
     .del()
     .then(count => {
@@ -51,10 +70,10 @@ const stdDelById = (tbl) => (req, res) => {
     .catch(err => {
       res.status(500).json(err);
     });
-}
+};
 
-const stdPutById = (tbl) => (req, res) => {
-    db(tbl)
+const stdPutById = tbl => (req, res) => {
+  db(tbl)
     .where({ id: req.params.id })
     .update(req.body)
     .then(count => {
@@ -65,16 +84,16 @@ const stdPutById = (tbl) => (req, res) => {
       }
     })
     .catch(err => res.status(500).json(err));
-}
+};
 
 // get cohorts
-const tableNames = ['cohorts', 'students']
-tableNames.forEach(name=>{
-    server.get(`/api/${name}`, stdGet(name));
-    server.get(`/api/${name}/:id`, stdGetById(name));
-    server.post(`/api/${name}`, stdPost(name));
-    server.delete(`/api/${name}/:id`, stdDelById(name));
-    server.put(`/api/${name}/:id`, stdPutById(name));
+const tableNames = ["cohorts", "students"];
+tableNames.forEach(name => {
+  server.get(`/api/${name}`, stdGet(name));
+  server.get(`/api/${name}/:id`, stdGetById(name));
+  server.post(`/api/${name}`, stdPost(name));
+  server.delete(`/api/${name}/:id`, stdDelById(name));
+  server.put(`/api/${name}/:id`, stdPutById(name));
 });
 
 // get cohort by id
@@ -190,10 +209,10 @@ server.get("/api/cohorts/:id/students", (req, res) => {
 // });
 // get students by ID modified
 // server.get("/api/students/:id", (req, res) => {
-//   db.select('students.id', 'students.name', 'cohorts.name as cohort')
+//   db.select("students.id", "students.name", "cohorts.name as cohort")
 //     .from("students")
-//     .innerJoin('cohorts', 'cohorts.id', '=', 'students.cohort_id')
-//     .where({'students.id': req.params.id })
+//     .innerJoin("cohorts", "cohorts.id", "=", "students.cohort_id")
+//     .where({ "students.id": req.params.id })
 //     .then(student => {
 //       if (student.length > 0) {
 //         res.status(200).json(student);
